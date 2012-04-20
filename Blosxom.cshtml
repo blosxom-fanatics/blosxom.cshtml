@@ -1,0 +1,111 @@
+﻿@using System
+@using System.Linq
+@using System.Text
+@functions{
+    const String SiteName = "Blosxom.cshtml Blog";
+    const String SiteRoot = "/Blosxom/"; // /Blosxom.chtml -> /Blosxom/
+    const String SiteDescription = "Blosxom.cshtml Blog";
+    const String DataRootDirectory = "~/App_Data/Blosxom/";
+    const String DefaultFlavour = "html";
+    const Int32 DefaultShowEntries = 5;
+    
+    public class Entry
+    {
+        private String _content;
+        
+        public String Title
+        {
+            get;
+            set;
+        }
+        public String FilePath
+        {
+            get;
+            set;
+        }
+        public String Path
+        {
+            get;
+            set;
+        }
+        public DateTime ModifiedAt
+        {
+            get;
+            set;
+        }
+        public DateTime CreatedAt
+        {
+            get;
+            set;
+        }
+        
+        public String GetContent()
+        {
+            if (_content == null)
+            {
+                _content = String.Join("\r\n", File.ReadLines(FilePath, Encoding.UTF8).Skip(1));
+            }
+            return _content;
+        }
+    }
+    
+    public IEnumerable<Entry> GetEntries()
+    {
+        if (!(Cache["Entries"] is IEnumerable<Entry>))
+        {
+            var entriesDir = Path.Combine(Server.MapPath(DataRootDirectory), "Entries");
+            Cache["Entries"] = Directory.GetFiles(entriesDir, "*.txt", SearchOption.AllDirectories)
+                                 .Select(x => CreateEntryFromPath(entriesDir, x));
+        }
+
+        return Cache["Entries"] as IEnumerable<Entry>;
+    }
+    public Entry CreateEntryFromPath(String entriesDir, String path)
+    {
+        return new Entry()
+               {
+                   ModifiedAt = File.GetLastWriteTime(path),
+                   CreatedAt = File.GetCreationTime(path),
+                   FilePath = path,
+                   // Remove .txt & Entries Directory path + replace "\" -> "/"
+                   Path = path.Substring(0, path.Length-4).Replace(entriesDir, "").Replace('\\', '/').TrimStart('/'),
+                   Title = File.ReadLines(path).FirstOrDefault() ?? "Untitled",
+               };
+    }
+}
+@{
+    var requestFilterPath = String.Join("/", UrlData);
+    var flavour = DefaultFlavour;
+  
+    if (requestFilterPath == "Feed")
+    {
+        requestFilterPath = "";
+        flavour = "feed";
+    }
+    
+    IEnumerable<Entry> entries = GetEntries().OrderBy(x => x.CreatedAt);
+    
+    if (!String.IsNullOrWhiteSpace(requestFilterPath))
+    {
+        entries = entries.Where(x => x.Path.StartsWith(requestFilterPath));
+    }
+    else
+    {
+        entries = entries.Take(DefaultShowEntries);
+    }
+
+    var flavourBody = Path.Combine(DataRootDirectory, "Flavours", flavour + ".cshtml");
+    var pageData = new Dictionary<String, Object>()
+    {
+        { "SiteName", SiteName },
+        { "SiteRoot", SiteRoot },
+        { "SiteDescription", SiteDescription },
+        { "RequestPath", requestFilterPath },
+        { "Entries", entries },
+        { "Entry",  entries.FirstOrDefault() },
+        { "Flavour", flavour },
+    };
+
+    var handlers = new Dictionary<String, Func<String>>();
+    @RenderPage(flavourBody, pageData);
+}

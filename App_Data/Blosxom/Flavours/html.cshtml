@@ -1,0 +1,16 @@
+@{
+    IEnumerable<dynamic> entries = PageData["Entries"];
+}<!DOCTYPE html>
+<title>@(entries.Count() != 1 ? "" : entries.First().Title + " - ")@PageData["SiteName"]</title>
+
+<h1>@PageData["SiteName"]</h1>
+
+@foreach (var entry in entries) {
+<article>
+<header>
+<h1><a href="@PageData["SiteRoot"]@entry.Path">@entry.Title</a></h1>
+<p>Created at: <time>@entry.CreatedAt</time></p>
+</header>
+@Html.Raw(entry.GetContent())
+</article>
+}

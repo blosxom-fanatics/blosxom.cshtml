@@ -1,0 +1,25 @@
+@{
+    IEnumerable<dynamic> entries = PageData["Entries"];
+    String requestPath = PageData["RequestPath"];
+
+    Response.ContentType = "application/rss+xml";
+    
+}<rss version="2.0">
+<channel>
+<title>@PageData["SiteName"]</title>
+<link>@PageData["SiteRoot"]</link>
+<description>@PageData["SiteDescription"]</description>
+
+@foreach (var entry in (IEnumerable<dynamic>)PageData["Entries"]) {
+<item>
+<title>@entry.Title</title>
+<pubDate>@entry.ModifiedAt.ToString("s")</pubDate>
+@Html.Raw("<link>")@(PageData["SiteRoot"] + entry.Path)@Html.Raw("</link>")
+<description><![CDATA[
+@Html.Raw(entry.GetContent())
+]]></description>
+</item>
+}
+
+</channel>
+</rss>
