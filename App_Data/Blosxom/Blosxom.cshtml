@@ -1,0 +1,137 @@
+﻿@using System
+@using System.Linq
+@using System.Text
+@functions{
+    const String DataRootDirectory = "~/App_Data/Blosxom/";
+    
+    public class Config
+    {
+        public String SiteName { get; set; }
+        public String SiteRoot { get; set; }
+        public String SiteDescription { get; set; }
+        public String DefaultFlavour { get; set; }
+        public Int32 DefaultShowEntries { get; set; }
+    }
+    
+    public class Entry
+    {
+        private Object _syncObject = new Object();
+        private String _content;
+        
+        public String Title
+        {
+            get;
+            set;
+        }
+        public String FilePath
+        {
+            get;
+            set;
+        }
+        public String Path
+        {
+            get;
+            set;
+        }
+        public DateTime ModifiedAt
+        {
+            get;
+            set;
+        }
+        public DateTime CreatedAt
+        {
+            get;
+            set;
+        }
+        
+        public String GetContent()
+        {
+            if (_content == null)
+            {
+                lock (_syncObject)
+                {
+                    _content = String.Join("\r\n", File.ReadLines(FilePath, Encoding.UTF8).Skip(1));
+                }
+            }
+            return _content;
+        }
+    }
+    
+    public IEnumerable<Entry> GetEntries()
+    {
+        var cacheKey = "Blosxom.cshtml+" + DataRootDirectory;
+
+        if (true || !(Cache[cacheKey] is IEnumerable<Entry>))
+        {
+            var entriesDir = Path.Combine(Server.MapPath(DataRootDirectory), "Entries");
+            var entries = Directory.GetFiles(entriesDir, "*.txt", SearchOption.AllDirectories)
+                                   .Select(x => CreateEntryFromPath(entriesDir, x))
+                                   .ToList();
+            Cache.Remove(cacheKey);
+            Cache.Add(cacheKey,
+                      entries,
+                      new System.Web.Caching.CacheDependency(Directory.GetDirectories(entriesDir, "*", SearchOption.AllDirectories).Union(new [] { entriesDir }).ToArray()),
+                      DateTime.Now.AddMinutes(5),
+                      System.Web.Caching.Cache.NoSlidingExpiration,
+                      System.Web.Caching.CacheItemPriority.Low,
+                      null);
+        }
+
+        return Cache[cacheKey] as IEnumerable<Entry>;
+    }
+    public Entry CreateEntryFromPath(String entriesDir, String path)
+    {
+        return new Entry()
+               {
+                   ModifiedAt = File.GetLastWriteTime(path),
+                   CreatedAt = File.GetCreationTime(path),
+                   FilePath = path,
+                   // Remove .txt & Entries Directory path + replace "\" -> "/"
+                   Path = path.Substring(0, path.Length-4).Replace(entriesDir, "").Replace('\\', '/').TrimStart('/'),
+                   Title = File.ReadLines(path).FirstOrDefault() ?? "Untitled",
+               };
+    }
+}
+@{
+    var config = new Config();
+    
+    // Setup
+    @RenderPage(Path.Combine(DataRootDirectory, "Config.cshtml"), new { Config = config });
+    
+    var requestFilterPath = String.Join("/", UrlData);
+    var flavour = config.DefaultFlavour;
+  
+    if (requestFilterPath == "Feed")
+    {
+        requestFilterPath = "";
+        flavour = "feed";
+    }
+    
+    IEnumerable<Entry> entries = GetEntries().OrderByDescending(x => x.CreatedAt);
+    
+    if (!String.IsNullOrWhiteSpace(requestFilterPath))
+    {
+        entries = entries.Where(x => x.Path.StartsWith(requestFilterPath));
+    }
+    else
+    {
+        entries = entries.Take(config.DefaultShowEntries);
+    }
+
+    var flavourBody = Path.Combine(DataRootDirectory, "Flavours", flavour + ".cshtml");
+    var pageData = new Dictionary<String, Object>()
+    {
+        { "Config", config },
+        { "SiteName", config.SiteName },
+        { "SiteRoot", config.SiteRoot },
+        { "SiteDescription", config.SiteDescription },
+        { "RequestPath", requestFilterPath },
+        { "Entries", entries },
+        { "Entry",  entries.FirstOrDefault() },
+        { "Flavour", flavour },
+        { "ParentPageContext", PageContext },
+    };
+    
+    // Render Page
+    @RenderPage(flavourBody, pageData);
+}
