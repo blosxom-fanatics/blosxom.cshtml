@@ -1,10 +1,18 @@
 ﻿@* Save Encoding: UTF-8 with BOM *@@{
     var Config = PageData["Config"];
 
+    // サイトの名前
     Config.SiteName = "Blosxom.cshtml Blog";
+    // パス ( /Blosxom.cshtml の場合には /Blosxom/ )
     Config.SiteRoot = "/Blosxom/"; // /Blosxom.chtml -> /Blosxom/
+    // サイトのディスクリプション
     Config.SiteDescription = "Blosxom.cshtml Blog";
+   
+    // ----- 以下はオプション -----
+    // デフォルトのflavourの名前
     Config.DefaultFlavour = "html";
+    // エントリ表示数
     Config.DefaultShowEntries = 5;
+    // キャッシュ時間 (更新ともに破棄されるので特に変更しなくても問題ありません)
     Config.CacheDuration = TimeSpan.FromHours(24);
 }
