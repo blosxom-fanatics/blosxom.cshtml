@@ -91,7 +91,8 @@
     }
 }
 @{
-    var dataRootDirectory = PageData[0] as String;
+    var parentPageContext = PageData["PageContext"] as WebPageContext;
+    var dataRootDirectory = PageData["DataRootDirectory"] as String;
     var config = new Config();
     
     // Setup
@@ -128,7 +129,7 @@
         { "Entries", entries },
         { "Entry",  entries.FirstOrDefault() },
         { "Flavour", flavour },
-        { "ParentPageContext", PageContext },
+        { "ParentPageContext", parentPageContext },
     };
     
     // Render Page

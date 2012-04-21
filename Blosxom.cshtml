@@ -1,1 +1,5 @@
-﻿@RenderPage("~/App_Data/Blosxom/Blosxom.cshtml", "~/App_Data/Blosxom/")
+﻿@RenderPage("~/App_Data/Blosxom/Blosxom.cshtml", new
+{
+    DataRootDirectory = "~/App_Data/Blosxom/",
+    PageContext       = PageContext,
+})
