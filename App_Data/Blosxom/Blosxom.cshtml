@@ -2,8 +2,6 @@
 @using System.Linq
 @using System.Text
 @functions{
-    const String DataRootDirectory = "~/App_Data/Blosxom/";
-    
     public class Config
     {
         public String SiteName { get; set; }
@@ -57,13 +55,13 @@
         }
     }
     
-    public IEnumerable<Entry> GetEntries()
+    public IEnumerable<Entry> GetEntries(String dataRootDirectory)
     {
-        var cacheKey = "Blosxom.cshtml+" + DataRootDirectory;
+        var cacheKey = "Blosxom.cshtml+" + dataRootDirectory;
 
         if (true || !(Cache[cacheKey] is IEnumerable<Entry>))
         {
-            var entriesDir = Path.Combine(Server.MapPath(DataRootDirectory), "Entries");
+            var entriesDir = Path.Combine(Server.MapPath(dataRootDirectory), "Entries");
             var entries = Directory.GetFiles(entriesDir, "*.txt", SearchOption.AllDirectories)
                                    .Select(x => CreateEntryFromPath(entriesDir, x))
                                    .ToList();
@@ -93,10 +91,11 @@
     }
 }
 @{
+    var dataRootDirectory = PageData[0] as String;
     var config = new Config();
     
     // Setup
-    @RenderPage(Path.Combine(DataRootDirectory, "Config.cshtml"), new { Config = config });
+    @RenderPage(Path.Combine(dataRootDirectory, "Config.cshtml"), new { Config = config });
     
     var requestFilterPath = String.Join("/", UrlData);
     var flavour = config.DefaultFlavour;
@@ -106,8 +105,8 @@
         requestFilterPath = "";
         flavour = "feed";
     }
-    
-    IEnumerable<Entry> entries = GetEntries().OrderByDescending(x => x.CreatedAt);
+
+    IEnumerable<Entry> entries = GetEntries(dataRootDirectory).OrderByDescending(x => x.CreatedAt);
     
     if (!String.IsNullOrWhiteSpace(requestFilterPath))
     {
@@ -118,7 +117,7 @@
         entries = entries.Take(config.DefaultShowEntries);
     }
 
-    var flavourBody = Path.Combine(DataRootDirectory, "Flavours", flavour + ".cshtml");
+    var flavourBody = Path.Combine(dataRootDirectory, "Flavours", flavour + ".cshtml");
     var pageData = new Dictionary<String, Object>()
     {
         { "Config", config },
