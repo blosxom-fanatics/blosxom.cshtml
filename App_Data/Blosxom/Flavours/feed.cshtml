@@ -14,7 +14,7 @@
 @foreach (var entry in (IEnumerable<dynamic>)PageData["Entries"]) {
 <item>
 <title>@entry.Title</title>
-<pubDate>@entry.ModifiedAt.ToString("s")</pubDate>
+<pubDate>@entry.CreatedAt.ToString("s")</pubDate>
 @Html.Raw("<link>")@(PageData["SiteRoot"] + entry.Path)@Html.Raw("</link>")
 <description><![CDATA[
 @Html.Raw(entry.GetContent())
