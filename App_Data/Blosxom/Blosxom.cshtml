@@ -151,6 +151,15 @@
         { "Flavour", flavour },
         { "ParentPageContext", parentPageContext },
     };
+
+    // ひとつもエントリがないときは404
+    if (!entries.Any())
+    {
+        Response.StatusCode = 404;
+        Response.ClearContent(); // IISに任せる
+        //Response.Write("<!DOCTYPE html><title>Not Found</title><h1>Not Found</h1>");
+        return;
+    }
     
     // Render Page
     @RenderPage(flavourBody, pageData);
