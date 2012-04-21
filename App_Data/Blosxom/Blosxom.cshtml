@@ -70,7 +70,7 @@
     {
         var cacheKey = "Blosxom.cshtml+" + dataRootDirectory;
 
-        if (true || !(Cache[cacheKey] is IEnumerable<Entry>))
+        if (!(Cache[cacheKey] is IEnumerable<Entry>))
         {
             var entriesDir = Path.Combine(Server.MapPath(dataRootDirectory), "Entries");
             var entries = Directory.GetFiles(entriesDir, "*.txt", SearchOption.AllDirectories)
