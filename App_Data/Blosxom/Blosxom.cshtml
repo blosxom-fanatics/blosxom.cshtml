@@ -75,6 +75,7 @@
             var entriesDir = Path.Combine(Server.MapPath(dataRootDirectory), "Entries");
             var entries = Directory.GetFiles(entriesDir, "*.txt", SearchOption.AllDirectories)
                                    .Select(x => CreateEntryFromPath(entriesDir, x))
+                                   .OrderByDescending(x => x.CreatedAt)
                                    .ToList();
             Cache.Remove(cacheKey);
             Cache.Add(cacheKey,
@@ -118,7 +119,7 @@
         flavour = "feed";
     }
 
-    IEnumerable<Entry> entries = GetEntries(dataRootDirectory, config.CacheDuration).OrderByDescending(x => x.CreatedAt);
+    IEnumerable<Entry> entries = GetEntries(dataRootDirectory, config.CacheDuration);
     
     if (!String.IsNullOrWhiteSpace(requestFilterPath))
     {
@@ -161,6 +162,9 @@
         //Response.Write("<!DOCTYPE html><title>Not Found</title><h1>Not Found</h1>");
         return;
     }
+    
+    // Last-Modified
+    Response.Headers.Add("Last-Modified", entries.OrderByDescending(x => x.ModifiedAt).First().ModifiedAt.ToUniversalTime().ToString("r"));
     
     // Render Page
     @RenderPage(flavourBody, pageData);
