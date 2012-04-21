@@ -107,7 +107,7 @@
         flavour = "feed";
     }
     
-    IEnumerable<Entry> entries = GetEntries().OrderBy(x => x.CreatedAt);
+    IEnumerable<Entry> entries = GetEntries().OrderByDescending(x => x.CreatedAt);
     
     if (!String.IsNullOrWhiteSpace(requestFilterPath))
     {
