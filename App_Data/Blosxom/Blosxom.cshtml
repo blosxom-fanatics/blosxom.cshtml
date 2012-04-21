@@ -122,7 +122,16 @@
     
     if (!String.IsNullOrWhiteSpace(requestFilterPath))
     {
-        entries = entries.Where(x => x.Path.StartsWith(requestFilterPath));
+        if (requestFilterPath.EndsWith("/"))
+        {
+            // list
+            entries = entries.Where(x => x.Path.StartsWith(requestFilterPath));
+        }
+        else
+        {
+            // entry page
+            entries = entries.Where(x => x.Path == requestFilterPath);
+        }
     }
     else
     {
