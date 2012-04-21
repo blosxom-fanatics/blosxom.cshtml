@@ -155,6 +155,7 @@
     // ひとつもエントリがないときは404
     if (!entries.Any())
     {
+        parentPageContext.Page.Layout = null;
         Response.StatusCode = 404;
         Response.ClearContent(); // IISに任せる
         //Response.Write("<!DOCTYPE html><title>Not Found</title><h1>Not Found</h1>");
