@@ -9,6 +9,17 @@
         public String SiteDescription { get; set; }
         public String DefaultFlavour { get; set; }
         public Int32 DefaultShowEntries { get; set; }
+        public TimeSpan CacheDuration { get; set; }
+        
+        public Config()
+        {
+            SiteName = "Blosxom.cshtml Blog";
+            SiteRoot = "/Blosxom/"; // /Blosxom.chtml -> /Blosxom/
+            SiteDescription = "Blosxom.cshtml Blog";
+            DefaultFlavour = "html";
+            DefaultShowEntries = 5;
+            CacheDuration = TimeSpan.FromHours(24);
+        }
     }
     
     public class Entry
@@ -55,7 +66,7 @@
         }
     }
     
-    public IEnumerable<Entry> GetEntries(String dataRootDirectory)
+    public IEnumerable<Entry> GetEntries(String dataRootDirectory, TimeSpan cacheDuration)
     {
         var cacheKey = "Blosxom.cshtml+" + dataRootDirectory;
 
@@ -69,7 +80,7 @@
             Cache.Add(cacheKey,
                       entries,
                       new System.Web.Caching.CacheDependency(Directory.GetDirectories(entriesDir, "*", SearchOption.AllDirectories).Union(new [] { entriesDir }).ToArray()),
-                      DateTime.Now.AddMinutes(5),
+                      DateTime.Now.Add(cacheDuration),
                       System.Web.Caching.Cache.NoSlidingExpiration,
                       System.Web.Caching.CacheItemPriority.Low,
                       null);
@@ -107,7 +118,7 @@
         flavour = "feed";
     }
 
-    IEnumerable<Entry> entries = GetEntries(dataRootDirectory).OrderByDescending(x => x.CreatedAt);
+    IEnumerable<Entry> entries = GetEntries(dataRootDirectory, config.CacheDuration).OrderByDescending(x => x.CreatedAt);
     
     if (!String.IsNullOrWhiteSpace(requestFilterPath))
     {
