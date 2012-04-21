@@ -1,4 +1,5 @@
 @{
+    PageData["ParentPageContext"].Page.Layout = null;
     IEnumerable<dynamic> entries = PageData["Entries"];
 }<!DOCTYPE html>
 <title>@(entries.Count() != 1 ? "" : entries.First().Title + " - ")@PageData["SiteName"]</title>
